@@ -1,7 +1,7 @@
 import pc from "picocolors";
 import * as p from "@clack/prompts";
-import { testConnection } from "./gemini.js";
 import { configure, getConfig, clearConfig } from "../util/config.js";
+import type { configTypes } from "../util/types.js";
 
 
 type AI = "gemini";
@@ -11,13 +11,13 @@ interface AIModelMap {
 }
 
 const default_model: AIModelMap = {
-  gemini: "gemini-3.5-flash-lite",
+  gemini: "gemini-4-hydrogen",
 };
 
 
 export async function connectToAI(ai: AI): Promise<void> {
-  const config = getConfig();
-  if (config.apiKey != "") {
+  const config : configTypes = getConfig();
+  if (config.apiKey?.trim()) {
     console.log(pc.red("   This will remove your old credentials."));
     const shouldProceed: boolean | symbol = await p.confirm({
       message: "Do you want to continue?",
@@ -28,6 +28,7 @@ export async function connectToAI(ai: AI): Promise<void> {
     }
     clearConfig();
   }
+
   const apikey: string | symbol = await p.password({
     message: `${pc.magenta("Paste your API key:\n")}`,
     mask: "*",
@@ -46,6 +47,7 @@ export async function connectToAI(ai: AI): Promise<void> {
     //@ts-ignore
     process.exit(0);
   }
+
   const AI_MODEL: string = default_model[ai];
   const model: string | symbol = await p.text({
     message: `${pc.magenta("AI Model ")} ${pc.cyan(`(Not sure? Press Enter for best default: ${AI_MODEL}):`)}`,
@@ -63,12 +65,18 @@ export async function connectToAI(ai: AI): Promise<void> {
     process.exit(0);
   }
 
-  const result: boolean = await testConnection(apikey as string, model as string);
+  let result: boolean;
+  switch(ai) {
+    case "gemini": 
+      const { testConnection } = await import("./gemini.js")
+      result = await testConnection((apikey as string).trim(), (model as string).trim());
+  }
+
   if (result) {
     configure((apikey as string).trim(), ai, (model as string).trim());
     p.outro(pc.cyan(`All Done! Saved ${model as string} for ${ai}.`));
   } else {
-    p.log.error("Connection failed. Try Agian.");
+    p.log.error("Connection failed. Try Again.");
   }
 }
 

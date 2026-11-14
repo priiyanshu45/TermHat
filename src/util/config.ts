@@ -1,4 +1,5 @@
 import Conf from "conf";
+import type { configTypes } from "./types.js";
 
 const conf = new Conf({ projectName: "termhat" });
 
@@ -15,9 +16,9 @@ export function getConfig() {
   provider: conf.get("provider"),
   model: conf.get("model"),
   }
-  return config;
+  return config as configTypes;
 }
 
 export function clearConfig() {
-    conf.clear();
+  conf.clear();
 }

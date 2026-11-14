@@ -10,3 +10,9 @@ export interface CLIOptions {
   run?: boolean;
   copy?: boolean;
 }
+
+export interface configTypes {
+  apiKey: string;
+  provider: string;
+  model: string;
+}

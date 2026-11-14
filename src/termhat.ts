@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 //@ts-ignore
 import process from "node:process";
-import showBanner from "./ui/banner.js";
 import { program } from "commander";
-import executer from "./core/executer.js";
 
 program
   .name("termhat")
@@ -13,16 +11,15 @@ program
   .option("-r, --run", "Skip menus and run the command directly")
   .option("-c, --copy", "Copy the generated command to clipboard")
   .action(async (taskArr, option) => {
-    if(taskArr.length != 0) {
-      const taskSentence = taskArr.join(" ");
-      await executer(taskSentence, option)
-    process.exit(0);
+    if (taskArr.length === 0) {
+      const { default: showBanner } = await import("./ui/banner.js");
+      await showBanner();
+      return;
     }
+    const taskSentence = taskArr.join(" ");
+    const {default: executer} = await import("./core/executer.js")
+    await executer(taskSentence, option);
+    process.exit(0);
   });
 
-if(process.argv.length <= 2){
-  await showBanner();
-}
-
-
-program.parse(process.argv);
+await program.parseAsync(process.argv);

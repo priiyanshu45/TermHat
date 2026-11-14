@@ -2,15 +2,15 @@
 import process from "node:process";
 import pc from "picocolors";
 import * as p from "@clack/prompts";
-import executer from "../core/executer.js";
-import figlet from "figlet";
-import { connectToAI } from "../ai/connect.js";
-import { getConfig } from "../util/config.js";
 
+async function configure(haveCredentials : boolean) {
+  let msg = `${pc.cyan("Choose your AI provider ")}`;
+  if(haveCredentials){
+    msg = `${pc.cyan("Choose your AI provider ")}${pc.yellow("(replaces any previous setup): ")}`
+  }
 
-async function configure() {
   const chooseAi = await p.select({
-      message: `${pc.cyan("Choose your AI provider ")}${pc.yellow("(replaces any previous setup): ")}`,
+      message: msg,
       options: [
         { value: "gemini", label: "Google Gemini", hint: "Free tier available (Recommended)"},
         // { value: "openai", label: "OpenAI", hint: "Paid API credits required" },
@@ -20,15 +20,17 @@ async function configure() {
       console.log(pc.yellow("Cancelled"))
       process.exit(0);
     }
-    if(chooseAi === "gemini"){
-      await connectToAI(chooseAi);
-    }
+    
+    const {connectToAI} = await import("../ai/connect.js")
+    await connectToAI(chooseAi);
+
 }
 
 export default async function home() {
+  const { getConfig } = await import("../util/config.js")
   if(!getConfig().apiKey) {
-    await configure();
-    if(!getConfig().apiKey) process.exit(0);
+    await configure(false);
+    process.exit(0);
   }
 
   const opt = await p.select({
@@ -76,11 +78,14 @@ export default async function home() {
       p.outro(pc.dim("Request cancelled."));
       process.exit(0);
     }
-    await executer(request as string, {});
+
+    const {default: executer} = await import("../core/executer.js")
+    await executer(request as string);
   }
 
   if (opt === "learn") {
     console.clear();
+    const { default: figlet } = await import("figlet");
     const heading = figlet.textSync("A quick guide to TermHat.", {
       font: "Mini",
       horizontalLayout: "fitted",
@@ -140,12 +145,13 @@ export default async function home() {
       console.log(pc.red("User pressed Ctrl+C."));
       process.exit(0);
     }
-    await executer(choose as string, {});
+    const {default: executer} = await import("../core/executer.js")
+    await executer(choose as string);
     process.exit(0);
   }
 
   if (opt === "configure") {
-    await configure();
+    await configure(true);
   }
 
   if (opt === "exit") {

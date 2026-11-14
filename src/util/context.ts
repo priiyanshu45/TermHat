@@ -7,6 +7,19 @@ export interface EnvironmentContext {
   cwd: string;
 }
 
+function detectPowerShellExecutable(): string {
+  const psModulePath = process.env.PSModulePath || "";
+
+  if (
+    process.env.POWERSHELL_DISTRIBUTION_CHANNEL ||
+    /\\PowerShell\\7/i.test(psModulePath)
+  ) {
+    return "pwsh.exe";
+  }
+
+  return "powershell.exe";
+}
+
 export function getEnvironmentContext(): EnvironmentContext {
   // 1. Translate Node's internal platform names into clear OS names
   const osMap: Record<string, string> = {
@@ -31,11 +44,11 @@ export function getEnvironmentContext(): EnvironmentContext {
       process.env.POWERSHELL_DISTRIBUTION_CHANNEL ||
       process.env.PSExecutionPolicyPreference
     ) {
-      shell = "powershell";
+      shell = detectPowerShellExecutable();
     } else if (process.env.PROMPT) {
       shell = "cmd";
     } else if (process.env.PSModulePath) {
-      shell = "powershell";
+      shell = detectPowerShellExecutable();
     }
   }
 

@@ -1,6 +1,6 @@
  <div align="center">
 
-# 🎩 TermHat
+# TermHat
 
 ### Stop memorizing commands. Start describing tasks.
 
@@ -46,16 +46,16 @@ th set up a react project called shop
 
 We've all been there.
 
-You know exactly what you want to do, but you don't remember the command. Was it `mkdir`? Which flag do you need? Does your operating system use Bash, PowerShell or something else?
+You know exactly what you want to do, but you can't quite remember the command. Was it git checkout -b or git switch -c? Which flags do you need? How do you combine commands without messing something up? Does your operating system use Bash, PowerShell or something else?
 
-You end up searching the internet just to perform a simple task.
+You end up searching the internet and checking documentation just to perform a simple task.
 
 **TermHat makes that easier.**
 
 Instead of remembering commands, just describe what you want.
 
 ```bash
-th create a folder called projects
+th create a folder called project
 th make a python virtual environment
 th initialize a git repository
 th set up a next.js project called portfolio
@@ -70,7 +70,7 @@ Here's what makes TermHat different:
 - **Handle multiple steps.** Set up projects, configure environments and perform other multi-step terminal tasks with a single request.
 - **Learn along the way.** Instead of blindly copying commands from the internet, you can understand what each command actually does.
 
-> TermHat is a terminal assistant, not an autopilot. You're always the one making the final decision.
+> TermHat is a terminal **assistant**, not an autopilot. You're always the one making the final decision.
 
 ---
 
@@ -264,7 +264,7 @@ th -c show disk usage
 
 It doesn't mean automatic execution. It simply makes the process faster by skipping the intermediate menu. You still have to confirm the command.
 
-**Tip:** If your request contains something that looks like a command-line option, such as a filename beginning with `-`, use `--` to separate the options from your request.
+**Tip:** If your request contains something that could be mistaken for a command-line option (for example, a filename beginning with -), use -- to separate the options from your request.
 
 ```bash
 th -- delete the file -old.txt

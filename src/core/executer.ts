@@ -4,17 +4,17 @@ import process from "node:process";
 import { execSync } from "node:child_process";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
-import clipboard from "clipboardy";
-import responseByAI from "../ai/request.js";
 import type { CLIOptions } from "../util/types.js";
+import { getEnvironmentContext } from "../util/context.js";
 
 function quit(msg: string) {
   p.outro(msg);
   process.exit(0);
 }
 
-function copyCommand(command: string) {
+async function copyCommand(command: string) {
   try {
+    const {default: clipboard} = await import("clipboardy");
     clipboard.writeSync(command);
     console.log(pc.green("Successfully copied to clipboard."));
   } catch {
@@ -23,9 +23,12 @@ function copyCommand(command: string) {
   }
 }
 
-function runCommand(command: string) {
+async function runCommand(command: string) {
+  const { shell } = getEnvironmentContext();
   try {
-    execSync(command, { stdio: "inherit" });
+    execSync(command, {
+      stdio: "inherit", shell: shell !== "unknown" ? shell : undefined,
+    });
     console.log(pc.green("\nCommand ran successfully."));
   } catch {
     console.log(pc.red("\nThe command exited with an error."));
@@ -36,7 +39,7 @@ function runCommand(command: string) {
 
 async function askConfirmation(response: any): Promise<boolean> {
   const cmd = response.command as string;
-  let result: any;
+  let result;
 
   switch (response.data_loss_risk) {
     case "POSSIBLE":
@@ -75,11 +78,10 @@ async function askConfirmation(response: any): Promise<boolean> {
   return result === true;
 }
 
-export default async function executer(task: string, option: CLIOptions) {
+export default async function executer(task: string, option: CLIOptions = {}) {
   const quick = option.run || option.copy;
 
-  
-  let spin: ReturnType<typeof p.spinner> | null = null;
+  let spin;
   if (!quick) {
     p.intro(pc.green("Understanding your intent..."));
     spin = p.spinner({
@@ -88,6 +90,7 @@ export default async function executer(task: string, option: CLIOptions) {
     spin.start(pc.cyan("Thinking through the best way"));
   }
 
+  const { default:responseByAI } = await import("../ai/request.js")
   const response = await responseByAI(task);
 
   if (!response) {
@@ -97,7 +100,7 @@ export default async function executer(task: string, option: CLIOptions) {
   }
   if (spin) spin.stop();
 
-  
+
   if (response.status !== "READY" && response.status !== "MANUAL") {
     console.log(pc.yellow(response.message ?? "Couldn't complete that action."));
     process.exit(0);
@@ -113,7 +116,7 @@ export default async function executer(task: string, option: CLIOptions) {
 
   
   if (option.copy) {
-    copyCommand(command);
+    await copyCommand(command);
     process.exit(0);
   }
 
@@ -134,7 +137,7 @@ export default async function executer(task: string, option: CLIOptions) {
       initialValue: true,
     });
     if (p.isCancel(wantCopy) || !wantCopy) quit(pc.green("Nothing was copied or run."));
-    copyCommand(command);
+    await copyCommand(command);
     quit("Thanks for using termHat.");
     return;
   }
@@ -167,7 +170,7 @@ export default async function executer(task: string, option: CLIOptions) {
     }
 
     if (choice === "copy") {
-      copyCommand(command);
+      await copyCommand(command);
       process.exit(0);
     }
 
@@ -175,7 +178,6 @@ export default async function executer(task: string, option: CLIOptions) {
       p.box(
         [
           pc.yellow(response.explanation ?? ""),
-          `${pc.cyan("Command:")} ${pc.green(command)}`,
         ].join("\n"),
         pc.magenta("Why this command?"),
         { rounded: true, contentAlign: "left" },
