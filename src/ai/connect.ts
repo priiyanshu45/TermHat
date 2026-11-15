@@ -1,17 +1,13 @@
 import pc from "picocolors";
 import * as p from "@clack/prompts";
 import { configure, getConfig, clearConfig } from "../util/config.js";
-import type { configTypes } from "../util/types.js";
+import type { AIModelMap, configTypes } from "../util/types.js";
 
 
 type AI = "gemini";
 
-interface AIModelMap {
-  gemini: string;
-}
-
 const default_model: AIModelMap = {
-  gemini: "gemini-4-hydrogen",
+  gemini: "gemini-3.5-flash",
 };
 
 

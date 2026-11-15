@@ -18,15 +18,14 @@ export async function testConnection(apiKey: string, model: string) {
   return false;
 }
 
-export async function askGemini(
-  userRequest: string,
-): Promise<TermhatResponse | null> {
-  try {
-    const { getConfig } = await import("../util/config.js");
+export async function askGemini( userRequest: string ): Promise<TermhatResponse | null> {
+
+  const { getConfig } = await import("../util/config.js");
     const config = getConfig();
     const apiKey = config["apiKey"];
     const model = config["model"];
 
+  try {
     if (!apiKey || !model) {
       console.log(
         pc.red(
@@ -44,6 +43,7 @@ export async function askGemini(
       model: model,
       contents: userRequest,
       config: {
+        abortSignal: AbortSignal.timeout(25000),
         systemInstruction: MASTER_PROMPT,
         temperature: 0.1,
         responseMimeType: "application/json",
@@ -54,6 +54,7 @@ export async function askGemini(
               type: Type.STRING,
               enum: [
                 "READY",
+                "MANUAL",
                 "NEEDS_CLARIFICATION",
                 "UNSUPPORTED",
                 "OUT_OF_SCOPE",
@@ -85,6 +86,10 @@ export async function askGemini(
 
     return JSON.parse(response.text) as TermhatResponse;
   } catch (error: any) {
+    if (error?.name === "TimeoutError" || error?.name === "AbortError") {
+      console.log(pc.yellow(`\n${model} took longer than 25s. Please try again.`));
+      return null;
+    }
     let msg = error?.message || "An unknown error occurred.";
     try {
       msg = JSON.parse(error.message)?.error?.message || msg;

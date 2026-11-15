@@ -1,237 +1,159 @@
- <div align="center">
+<div align="center">
 
-# TermHat
+# **TermHat**
 
-### Stop memorizing commands. Start describing tasks.
+### ***Stop memorizing commands. Start describing tasks.***
 
-Tell your terminal what you want in plain English.
+A cross-platform command-line assistant that turns plain-English requests into terminal commands, explains what they do, and **runs them only after you review and confirm.**
 
-TermHat turns your request into a real terminal command, explains what it does, and **asks for your permission before executing it.**
-
-No memorizing flags. No guessing syntax. No commands running behind your back.
+**TermHat v1.0.0 currently supports Google Gemini. Additional AI provider integrations are planned for future releases.**
 
 ```bash
 th set up a react project called shop
 ```
 
-**You describe it. TermHat translates it. You decide whether to run it.**
-
 </div>
 
 ---
 
-## 📖 Table of contents
+## Highlights
 
-- [Why TermHat?](#-why-termhat)
-- [How it works](#-how-it-works)
-- [Installation](#-installation)
-- [Getting started](#-getting-started)
-- [Using TermHat](#-using-termhat)
-- [Things you can do](#-things-you-can-do)
-- [Safety comes first](#-safety-comes-first)
-- [Commands that need your terminal](#-commands-that-need-your-terminal)
-- [Privacy](#-privacy)
-- [Configuration](#-configuration)
-- [What TermHat can and cannot do](#-what-termhat-can-and-cannot-do)
-- [Troubleshooting](#-troubleshooting)
-- [Frequently asked questions](#-frequently-asked-questions)
-- [For developers](#-for-developers)
-- [Known limitations](#-known-limitations)
-- [Roadmap](#-roadmap)
-- [License](#-license)
+- **Natural language to shell commands** for Linux, macOS and Windows. TermHat sends your request together with your operating system, detected shell and current working directory so the AI can generate environment-aware commands.
+- **Human confirmation before execution.** TermHat displays the generated command and asks before running it. The `--run` option does not bypass confirmation.
+- **Risk-tiered confirmation.** Commands classified as `NONE` or `POSSIBLE` use Yes/No prompts that default to No; `EXPECTED` and `UNKNOWN` require you to type `CONFIRM`.
+- **Structured AI output.** Gemini is instructed to return a fixed JSON response shape. TermHat parses the response and checks its required fields and allowed values before processing it. This checks the response format, not whether the command is safe.
+- **Multi-step tasks in one request.** The model can chain up to about 10 dependent steps for tasks such as project scaffolding, Python environments, Git and Docker basics.
+- **Honest about terminal-session limits.** Commands such as `cd` and virtual-environment activation are shown for you to paste into your own terminal instead of pretending a child process can change your current shell.
+- **Lazy-loaded modules.** Modules such as the AI SDK and clipboard support are loaded only when needed.
 
 ---
 
-## 💡 Why TermHat?
+## Table of contents
 
-We've all been there.
-
-You know exactly what you want to do, but you can't quite remember the command. Was it git checkout -b or git switch -c? Which flags do you need? How do you combine commands without messing something up? Does your operating system use Bash, PowerShell or something else?
-
-You end up searching the internet and checking documentation just to perform a simple task.
-
-**TermHat makes that easier.**
-
-Instead of remembering commands, just describe what you want.
-
-```bash
-th create a folder called project
-th make a python virtual environment
-th initialize a git repository
-th set up a next.js project called portfolio
-```
-
-Here's what makes TermHat different:
-
-- **Speak naturally.** Describe the task in everyday English. You don't need to know the exact command or its syntax.
-- **See before you execute.** TermHat shows you the generated command before anything happens.
-- **Understand what you're running.** Every command comes with a plain-English explanation.
-- **Built around your environment.** It considers your operating system, shell and current directory when generating commands.
-- **Handle multiple steps.** Set up projects, configure environments and perform other multi-step terminal tasks with a single request.
-- **Learn along the way.** Instead of blindly copying commands from the internet, you can understand what each command actually does.
-
-> TermHat is a terminal **assistant**, not an autopilot. You're always the one making the final decision.
+- [Example session](#example-session)
+- [Installation](#installation)
+- [Getting started](#getting-started)
+- [Usage](#usage)
+- [Examples](#examples)
+- [Safety model](#safety-model)
+- [Commands that need your own terminal](#commands-that-need-your-own-terminal)
+- [Privacy and data handling](#privacy-and-data-handling)
+- [Configuration](#configuration)
+- [Scope](#scope)
+- [How it works (architecture)](#how-it-works-architecture)
+- [Development](#development)
+- [Troubleshooting](#troubleshooting)
+- [FAQ](#faq)
+- [Known limitations](#known-limitations)
+- [Roadmap](#roadmap)
+- [License](#license)
 
 ---
 
-## ⚙️ How it works
-
-Using TermHat is straightforward.
+## Example session
 
 ```text
-       You describe what you want
-                  │
-                  ▼
-        TermHat understands your request
-                  │
-                  ▼
-        Sends context to the AI provider
-        (OS, shell and current directory)
-                  │
-                  ▼
-       AI generates a command and explanation
-                  │
-                  ▼
-           TermHat shows you
-          the command and its risk
-                  │
-                  ▼
-        Review your options:
-       Run · Explain · Copy · Cancel
-                  │
-                  ▼
-          Confirmation required
-                  │
-                  ▼
-          Command gets executed
+$ th create five folders named a, b, c, d and e
+
+┌  Understanding your intent...
+│
+◇  How would you like to proceed:
+│  Explain
+│
+│ ╭─Why this command?────────────────────────────────────────────╮
+│ │  This command will create five directories named a, b, c, d  │
+│ │  and e in the current directory, and will fail for any name  │
+│ │  that already exists.                                        │
+│ ╰──────────────────────────────────────────────────────────────╯
+│
+◇  Ready to Execute ──────────────────────────────────────────────╮
+│  Command: $mkdir a b c d e                                       │
+├──────────────────────────────────────────────────────────────────╯
+│
+◆  Run $mkdir a b c d e in your terminal?
+│  ● Yes / ○ No
 ```
 
-The important part?
+The exact command and explanation depend on your operating system, shell and the AI model's response. This session is illustrative.
 
-**Nothing executes simply because the AI generated a command.**
-
-TermHat puts you in control before execution, with additional confirmation for potentially destructive operations.
+>> TermHat is a terminal **assistant**, not an autopilot. You're always the one making the final decision.
 
 ---
 
-## 📦 Installation
+## Installation
 
 ### Requirements
 
-Before installing TermHat, make sure you have:
+- **Node.js 22.12.0 or later.** This minimum is required by the current CLI dependencies. A supported Node.js LTS release is recommended.
+- **A Google Gemini API key** for v1.0.0, available from [Google AI Studio](https://aistudio.google.com/apikey).
+- An internet connection when generating commands or testing the provider connection.
 
-- [Node.js](https://nodejs.org/) — a recent version (Node.js 20 or newer recommended).
-- A Google Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey).
-
-### Install using npm
+### Install from npm
 
 ```bash
 npm install -g termhat
 ```
 
-That's it!
-
-### Or install from source
+### Install from source
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/Priiyanshu45/termhat.git
 cd termhat
 npm install
 npm run link
 ```
 
-After installation, you can use either command:
+The installation provides two equivalent command names:
 
 ```bash
-th        # Short and convenient
-termhat   # Full command name
+th         # short form
+termhat    # full name
 ```
-
-Both do exactly the same thing.
 
 ---
 
-## 🚀 Getting started
+## Getting started
 
-Let's get TermHat running.
-
-### Step 1. Launch TermHat
-
-Open your terminal and run:
+**1. Launch TermHat.**
 
 ```bash
 th
 ```
 
-On your first launch, TermHat will guide you through connecting an AI provider.
+On the first run, TermHat asks you to configure an AI provider.
 
-### Step 2. Connect Gemini
+**2. Connect Google Gemini.**
 
-Paste your Google Gemini API key when prompted.
+Google Gemini is the provider implemented in v1.0.0. Paste your API key (the input is masked) and press Enter to accept the default model, or enter another model name available to your API key. TermHat tests the key and model before saving the new configuration. After successful setup, it exits; run `th` again to start using it.
 
-Press Enter to accept the default model.
-
-TermHat tests the connection before saving your configuration.
-
-### Step 3. Make your first request
-
-Try something simple:
+**3. Make a request.**
 
 ```bash
 th create a folder called projects
 ```
 
-TermHat will generate a command and show you something like this:
-
-```text
-┌  Ready to Execute
-│
-│  Command: $mkdir projects
-│
-└
-
-◆  Run $mkdir projects in your terminal?
-│  ● Yes / ○ No
-```
-
-Review the command.
-
-If everything looks right, press Enter to confirm.
-
-Your folder is created!
-
-And that's your first interaction with TermHat.
+Review the generated command. Confirm it to run, or cancel to leave your system unchanged by that command. Nothing is executed before confirmation.
 
 ---
 
-## 🖥️ Using TermHat
+## Usage
 
-There are two ways to interact with TermHat.
-
-### 1. Interactive mode
-
-Simply run:
+### Interactive mode
 
 ```bash
 th
 ```
 
-You'll see a menu with the following options:
-
-| Option | Description |
+| Menu option | What it does |
 |---|---|
-| Make a request | Describe a terminal task in plain English. |
-| Learn TermHat | Explore a short guide with useful examples. |
-| Configure AI provider | Change your API key or model. |
-| Exit | Close TermHat. |
+| Make a request | Describe a terminal task in plain English |
+| Learn TermHat | View a short guide and example requests |
+| Configure AI provider | Configure or replace provider credentials |
+| Exit | Close TermHat |
 
-### 2. Direct mode
+### Direct mode
 
-Already know what you want to do?
-
-Put your request directly after `th`.
-
-No quotation marks are needed.
+Put your request after `th`. Quotation marks are not normally needed.
 
 ```bash
 th show all files here
@@ -240,685 +162,479 @@ th initialize a git repository
 th delete the folder old-project
 ```
 
-TermHat will understand your request and generate the appropriate command.
-
-### Command-line options
-
-TermHat also supports a few useful options.
+### Options
 
 | Option | Short | Description |
 |---|---|---|
-| `--run` | `-r` | Skips the menu and explanation box, but still requires confirmation before execution. |
-| `--copy` | `-c` | Copies the generated command to your clipboard. Nothing executes. |
-| `--help` | `-h` | Displays available options. |
-| `--version` | `-V` | Displays the installed version. |
+| `--run` | `-r` | Skip the interactive menu and explanation screen. The command is still displayed in the confirmation prompt and must be confirmed before execution. |
+| `--copy` | `-c` | Copy the generated command to the clipboard. Nothing is executed. |
+| `--model` | `-m` | Change the configured AI model after testing the new model connection. |
+| `--help` | `-h` | Show help. |
+| `--version` | `-V` | Show the installed version. |
 
 Examples:
 
 ```bash
 th -r make a folder called test
 th -c show disk usage
+th -m
 ```
 
-**A quick note about `--run`:**
+**`--run` is not automatic execution.** It skips the menu and explanation screen, but it never skips the confirmation prompt.
 
-It doesn't mean automatic execution. It simply makes the process faster by skipping the intermediate menu. You still have to confirm the command.
+### After a command is generated
 
-**Tip:** If your request contains something that could be mistaken for a command-line option (for example, a filename beginning with -), use -- to separate the options from your request.
-
-```bash
-th -- delete the file -old.txt
-```
-
-### What happens after a command is generated?
-
-Depending on the request, TermHat gives you options:
+In normal interactive mode, TermHat offers these choices:
 
 | Choice | What happens |
 |---|---|
-| Execute | Moves to the confirmation step and executes after approval. |
-| Explain | Shows what the command does in more detail. |
-| Copy | Copies the command without executing it. |
-| Cancel | Stops the operation. Nothing runs. |
+| Execute | Shows the command and proceeds to the risk-based confirmation prompt |
+| Explain | Shows a plain-English explanation, then proceeds to confirmation |
+| Copy | Copies the command without running it |
+| Cancel | Exits without running the command |
 
 ---
 
-## ✨ Things you can do
+## Examples
 
-Here are some examples of what you can ask TermHat to do.
-
-### 📁 Create files and folders
+### Files and folders
 
 ```bash
 th create five folders named a, b, c, d and e
 th create a file named notes.txt
-th create a folder called projects
 ```
 
-### 🛠️ Set up entire projects
-
-Instead of remembering multiple setup commands, describe the project you want.
+### Project setup
 
 ```bash
 th set up a react project called shop
 th set up a next.js project called portfolio
 th set up a django project called blog
 th set up a rust project
+th create a c++ project folder
 ```
 
-TermHat can handle multiple project setup steps in a single request.
+New projects are created in a new subfolder. If you do not specify a project name, TermHat may choose a plain default such as `my-app` and should state that choice in its explanation.
 
-**A small safety detail:** New projects are created inside their own new folders. If you don't specify a project name, TermHat chooses a simple default, such as `my-app`, and tells you about it.
-
-### 🐍 Python environments
+### Python environments
 
 ```bash
 th create a python virtual environment
 th set up a flask project
 ```
 
-TermHat installs packages using the environment's own Python executable.
+Packages can be installed using the environment's own Python executable, so activation is not required for installation. Creating an environment and activating it are different operations. See [Commands that need your own terminal](#commands-that-need-your-own-terminal).
 
-This means it can install packages without requiring you to activate the environment first.
-
-There is one important distinction: creating a virtual environment and activating it are two different things. See [Commands that need your terminal](#-commands-that-need-your-terminal).
-
-### 🐙 Git and Docker
+### Git and Docker
 
 ```bash
 th initialize a git repository
 th build a docker image called myapp
 ```
 
-### 🗑️ Deleting files and folders
-
-Deleting something deserves extra attention.
-
-For example:
+### Deleting things
 
 ```bash
 th delete the folder old-project
 ```
 
-TermHat recognizes this as a destructive operation and requires an additional confirmation.
-
-You might see:
+A destructive command such as the following requires typed confirmation:
 
 ```text
-◆ Destructive action detected.
-
-Type CONFIRM to run:
-$rm -r -- old-project
-
-(Press Enter to cancel)
+◆ Destructive action detected. Type CONFIRM to run $rm -r -- old-project (Enter to cancel):
 ```
 
-You must explicitly type `CONFIRM`.
+You must type `CONFIRM`. Pressing Enter without typing it cancels.
 
-Simply pressing Enter cancels the operation.
-
-### 🤔 What if your request is unclear?
-
-TermHat doesn't try to guess when a request is too vague.
-
-For example:
+### Vague requests get a question, not a guess
 
 ```bash
 th clean my computer
 ```
 
-This doesn't tell TermHat which files or folders you want removed.
+For an unclear deletion target, TermHat should ask which files or folders you mean rather than inventing a target. You then submit a more specific request.
 
-Instead of generating a potentially dangerous command, it asks you to specify the target.
+### A note on setups that edit existing files
 
-**The idea is simple: when the target isn't clear, don't guess.**
+TermHat generates and runs terminal commands. It does not inspect your project files or directly edit their contents through a file-editing API. For example, it can install Tailwind CSS for a Vite project, but the edits that enable it in `vite.config.ts` and your CSS file are described for you to make.
 
 ---
 
-## 🛡️ Safety comes first
+## Safety model
 
-Terminal commands can do a lot. A single incorrect command can overwrite files, remove important data or change your system configuration.
+Terminal commands can overwrite or delete data. TermHat adds confirmation steps, but it is important to understand both what those steps do and what they do not guarantee.
 
-TermHat is designed with that responsibility in mind.
+### 1. You see the command before it runs
 
-It uses multiple layers of confirmation to reduce the chances of accidental damage.
+For a `READY` response, TermHat displays the generated command in the confirmation flow. It does not execute that command before confirmation.
 
-### 1. You always see the command first
+### 2. The AI assigns a risk level
 
-TermHat never executes a generated command immediately.
+The AI response includes a `data_loss_risk` value. TermHat uses that value to choose the confirmation prompt:
 
-You get an opportunity to inspect it before execution.
-
-### 2. Every command gets a risk classification
-
-The AI assigns one of four risk levels based on the potential impact of the command.
-
-| Risk level | Meaning | Confirmation |
+| Risk | Meaning | Confirmation |
 |---|---|---|
-| `NONE` | No existing data is expected to be changed. Examples include listing files or creating new folders. | Simple Yes/No, defaults to Yes. |
-| `POSSIBLE` | Existing files or settings might be changed or overwritten. | Warning, defaults to No. |
-| `EXPECTED` | Destructive changes are the intended result, such as deleting or wiping data. | Must type `CONFIRM`. |
-| `UNKNOWN` | The potential impact cannot be determined confidently. | Must type `CONFIRM`. |
+| `NONE` | The AI classifies the command as not deleting or overwriting existing data | Yes/No prompt, defaults to No |
+| `POSSIBLE` | Existing data might be overwritten or changed | Warning and Yes/No prompt, defaults to No |
+| `EXPECTED` | Destruction or removal is the intended effect | Must type `CONFIRM` |
+| `UNKNOWN` | The command's impact is uncertain | Must type `CONFIRM` |
 
-For typed confirmations, an empty Enter cancels the operation.
+For typed confirmations, pressing Enter without typing `CONFIRM` cancels. A held-down Enter key cannot approve these typed confirmations.
 
-Holding down Enter cannot accidentally confirm a destructive command.
+**The risk label comes from the AI.** The confirmation logic does not independently inspect the command to determine whether the label is correct.
 
-### 3. Dangerous targets aren't guessed
+### 3. Unclear targets should not be guessed    
 
-Consider these requests:
+Requests such as "delete everything" or "free up space" do not identify a precise target. The system prompt instructs the model to ask for clarification instead of inventing files or folders to remove. The user must then provide the missing detail.
 
-```bash
-th delete everything
-th free up space
-th clean my computer
-```
+### 4. Other execution protections
 
-These requests don't identify exactly what should be removed.
+- `--run` never skips confirmation.
+- For a `READY` command, TermHat refuses execution when it is not attached to an interactive terminal.
+- An empty or structurally invalid AI response is not processed as a runnable command.
+- Cancelling a prompt or pressing `Ctrl+C` exits without approving the command.
+- Copying a command does not execute it.
+- `MANUAL` commands are shown for the user to paste into their own terminal; TermHat does not execute them.
 
-TermHat asks for clarification instead of inventing a deletion target.
+### What this does not guarantee
 
-### 4. Confirmation is always required
+The command, explanation and risk classification are generated by an AI model, and the model can be wrong. A command labelled `NONE` is **not guaranteed to be harmless**. TermHat v1.0.0 does not include an independent, rule-based safety engine that overrides the AI's risk classification. Always inspect the complete command and understand its effects before confirming it.
 
-Some additional protections:
-
-- `--run` does not bypass confirmation.
-- TermHat refuses to execute commands when it isn't connected to a real interactive terminal, such as when input is piped or scripted.
-- Pressing `Ctrl+C` at a prompt cancels the operation.
-- Copying a command never executes it.
-
-### 5. Explanations should tell you what actually happens
-
-TermHat is instructed to explain:
-
-- What will be created, changed or removed.
-- Where the operation will take place.
-- Whether existing files may be overwritten.
-- Whether nested files and folders are affected.
-
-It should never claim that deleted data is recoverable unless that is actually known.
-
-> **An important limitation:** The risk classification and explanation are generated by AI. AI can make mistakes. A command classified as `NONE` isn't guaranteed to be harmless.
->
-> Always inspect the actual command before confirming it. TermHat adds safeguards, but it cannot guarantee that every generated command is safe.
+Prompt hardening is also not a security boundary. Malicious or unusual request text can still be misunderstood by a model.
 
 ---
 
-## 📋 Commands that need your terminal
+## Commands that need your own terminal
 
-Not every terminal command behaves the same way.
+Some commands change the state of the current terminal session instead of doing work that can finish independently:
 
-Some commands change the state of your current terminal session rather than performing an operation that can be completed in a separate process.
-
-For example:
-
-| Command | What it does |
+| Command | What it changes |
 |---|---|
-| `cd projects` | Changes your current directory. |
-| `source venv/bin/activate` | Activates a Python virtual environment. |
-| `export NAME=value` | Sets an environment variable in your current shell. |
+| `cd projects` | Your current directory |
+| `source venv/bin/activate` | Your active Python environment in bash/zsh |
+| `export NAME=value` | An environment variable in your shell |
 
-TermHat executes commands in a temporary background process.
+TermHat runs a command in a child process. When that process exits, changes to that child process's current directory, environment or shell state do not change your parent terminal. This is normal process isolation, not something TermHat can work around.
 
-When that process closes, changes made to its environment disappear.
-
-This is a limitation of how child processes work, not a TermHat-specific bug.
-
-### So, what does TermHat do instead?
-
-It gives you the complete command and lets you copy it into your own terminal.
-
-For example, if you ask:
-
-```bash
-th set up a react project called shop and go into it
-```
-
-TermHat may respond with:
+For these tasks, TermHat returns the **complete command** and offers to copy it so you can paste it into your own terminal:
 
 ```text
-┌  Manual step needed
+┌ Manual step needed
+│ TermHat runs commands in its own temporary process, so moving into a
+│ folder would be forgotten when it closes. Please copy the command
+│ shown and paste it into your terminal yourself.
 │
-│  This task needs to change your current terminal session.
-│  TermHat cannot keep that change after its temporary process closes.
-│
-│  Paste this command into your terminal:
-│
-│  $npm create vite@latest shop -- --template react
-│   && cd shop && npm install
-│
+│ Paste this yourself: $npm create vite@latest shop -- --template react && cd shop && npm install
 └
 ◆ Copy it to your clipboard?
 ```
 
-You can then paste and execute it yourself.
+The rule is simple: **either TermHat runs the whole task, or it gives you the whole command.** It does not run part of a task and silently leave the rest for you to complete.
 
-### Why is this important?
-
-The rule is simple:
-
-**Either TermHat handles the entire task, or it gives you the entire command to execute yourself.**
-
-It doesn't intentionally execute half a task and leave you to figure out the rest.
-
-| Your request | What TermHat does |
+| You ask | Result |
 |---|---|
-| Set up a React project called shop | Executes the setup steps after confirmation. |
-| Set up a React project and go into it | Provides a complete command to paste yourself. |
-| Create a Python virtual environment | Creates the environment. |
-| Activate the Python virtual environment | Provides the activation command to paste yourself. |
+| Set up a React project called shop | TermHat runs the setup command after confirmation |
+| Set up a React project called shop and go into it | You receive one complete command to paste yourself |
+| Create a Python virtual environment | TermHat creates it; it is not activated in your current terminal |
+| Activate the virtual environment | You receive the activation command to paste yourself |
+| List files sorted by size (excluding `node_modules`) using a Node script | TermHat generates and runs a `node -e` one-liner after confirmation |
 
 ---
 
-## 🔒 Privacy
+## Privacy and data handling
 
-Your privacy matters, especially when using an AI-powered terminal assistant.
+### Sent to the AI provider with each request
 
-Here's what TermHat sends and what it keeps on your machine.
+In v1.0.0, requests are sent to Google Gemini with:
 
-### Information sent to the AI provider
+- The text of your request
+- Your operating system name
+- The detected shell name
+- The path of your current working directory (this path can contain your username)
 
-With each request, TermHat sends:
+### Not sent by TermHat as part of the request context
 
-- Your request text.
-- Your operating system (Linux, macOS or Windows).
-- Your shell (Bash, Zsh, PowerShell, etc.).
-- Your current working directory.
+- File contents
+- File listings
+- Environment variable values
 
-### Information that is not sent
+TermHat does not read your project files to build the request. Commands generated by the model may themselves use network access or access local files when you approve and run them; inspect the command before confirming it.
 
-TermHat does not send:
+Requests sent to Gemini are subject to Google's applicable terms and privacy policies. Review the [Gemini API terms](https://ai.google.dev/gemini-api/terms) and [Google Privacy Policy](https://policies.google.com/privacy) before sending sensitive information.
 
-- Your file contents.
-- Your file listings.
-- Your environment variables.
-- Other personal data from your machine.
+**Your API key is stored locally in plain text** using the [`conf`](https://github.com/sindresorhus/conf) package, in the user configuration directory under a folder named `termhat-nodejs`. Do not share that configuration file or commit it to version control. Other software or users who can access your user account may also be able to read it.
 
-### What about your API key?
+---
 
-Your Gemini API key is stored locally in a configuration file, usually inside your user configuration directory under:
+## Configuration
+
+Run `th` and choose **Configure AI provider**, or use `th -m` to change only the model.
+
+| Setting | Details in v1.0.0 |
+|---|---|
+| Provider | Google Gemini (the provider implemented in this release) |
+| API key | Entered once, masked while typing, and tested before the new configuration is saved |
+| Model | Defaults to `gemini-3.5-flash`; you can enter another model name your API key can access |
+
+When replacing existing credentials, TermHat asks for confirmation. The existing configuration is kept unless the new API key and model pass the connection test. Changing the model also tests the new model before saving it.
+
+---
+
+## Scope
+
+### What TermHat is designed to handle
+
+- Files and folders
+- Project setup for Node.js, React (Vite), Next.js, Rust, .NET, Python (including Django and Flask), and starter folders for C, C++ and Java
+- Python virtual environments and package installation
+- Basic Git and Docker operations
+- Inline scripts and one-liners (such as running quick Node.js `node -e` or Python `python -c` scripts directly in the terminal)
+- Multi-step tasks (the system prompt instructs the model to chain at most about 10 steps)
+
+The generated command still depends on the tools installed on your computer. For example, Docker tasks require Docker, and Rust tasks require the Rust toolchain.
+
+### What it declines or limits
+
+| Request | Expected response or limitation |
+|---|---|
+| General questions and chat | Declined. TermHat handles terminal tasks, not general conversation. |
+| Interactive programs such as `vim`, `nano`, `ssh` or REPLs | Declined because they need direct keyboard interaction. |
+| Running downloaded scripts such as `curl ... \| sh` | Declined by the system prompt. |
+| Uploading local files to remote servers | Declined by the system prompt. |
+| Admin privileges not requested | The model is instructed to ask first when elevation is needed. |
+| Instructions that try to override the system prompt | Treated as untrusted request text; the model is instructed not to follow them. |
+
+Development servers and watchers (such as `npm run dev` or `python manage.py runserver`) are allowed only when explicitly requested. They continue running until you stop them, usually with `Ctrl+C`.
+
+---
+
+## How it works (architecture)
 
 ```text
-termhat-nodejs
+request
+   │
+   ▼
+build user prompt (OS, shell, cwd, request text)
+   │
+   ▼
+provider selection (v1.0.0: Google Gemini)
+   │
+   ▼
+Gemini response using a constrained JSON schema
+   │
+   ▼
+parse JSON + validate response structure
+   │
+   ▼
+status: READY | MANUAL | NEEDS_CLARIFICATION | UNSUPPORTED | OUT_OF_SCOPE
+   │
+   ├── READY ──► display command ──► risk-based confirmation ──► execute
+   │
+   ├── MANUAL ─► display complete command ──► offer to copy (never execute)
+   │
+   └── other statuses ─────────────► display message and stop
 ```
 
-The key is currently stored in plain text.
-
-**Do not share this configuration file or commit it to a public Git repository.**
-
-When using Gemini, your requests are processed by Google and are subject to Google's own terms and privacy policy.
-
----
-
-## ⚙️ Configuration
-
-You can manage your AI provider through the interactive menu.
-
-Run:
-
-```bash
-th
-```
-
-Then select **Configure AI provider**.
-
-Currently available settings:
-
-| Setting | Description |
-|---|---|
-| Provider | Google Gemini (currently the only supported provider). |
-| API key | Enter your Gemini API key. Input is hidden while typing. |
-| Model | Accept the default model or enter another model name. |
-
-TermHat tests the API connection before saving your credentials.
-
-If you change your provider configuration, TermHat replaces the previous setup and asks for confirmation before removing the old credentials.
-
----
-
-## 🚧 What TermHat can and cannot do
-
-TermHat focuses on practical terminal tasks.
-
-### What it handles
-
-- Files and folders.
-- Project setup for Node.js, React, Next.js, Rust, .NET, Python and C/C++ starter projects.
-- Python virtual environments and package installation.
-- Basic Git operations.
-- Basic Docker operations.
-- Multi-step terminal tasks, with up to 10 steps chained into one command line.
-
-### What it deliberately avoids
-
-| Request | TermHat's response |
-|---|---|
-| General questions or conversations, such as asking about the weather | Declined. TermHat is designed for terminal tasks. |
-| Interactive programs such as `vim`, `nano` or `ssh` | Declined because they require direct keyboard interaction. |
-| Running downloaded scripts using commands such as `curl ... \| sh` | Declined. |
-| Uploading your files to remote servers | Declined. |
-| Operations requiring administrative privileges that you haven't requested | Asks first. |
-| Instructions attempting to override its rules | Treated as request text, not as authoritative instructions. |
-
-### What about development servers?
-
-Commands such as:
-
-```bash
-npm run dev
-```
-
-are supported when you explicitly request them.
-
-They continue running until you stop them, typically with `Ctrl+C`.
-
----
-
-## 🔧 Troubleshooting
-
-Here are a few common issues and how to handle them.
-
-### "API key or model not configured"
-
-Run:
-
-```bash
-th
-```
-
-Select **Configure AI provider** and enter your API key.
-
-### "Connection failed"
-
-Check the following:
-
-- Is your API key correct?
-- Does the model name exist?
-- Are you connected to the internet?
-
-If your API key is invalid or compromised, generate a new one through Google AI Studio.
-
-### "TermHat says the command needs an interactive terminal"
-
-TermHat refuses to execute commands when input is piped or scripted.
-
-This is intentional.
-
-Run TermHat directly inside your terminal.
-
-### Clipboard isn't working on Linux
-
-TermHat may need an external clipboard utility.
-
-You can install one of the following:
-
-- `xclip`
-- `wl-clipboard`
-
-If copying still fails, TermHat displays the command so you can copy it manually.
-
-### A command failed halfway through
-
-Multi-step commands aren't transactional.
-
-If a command contains six steps and the fourth fails, the first three may already have completed.
-
-For example, a project folder might already exist.
-
-Check what was created before retrying. Remove anything unnecessary only after verifying its contents.
-
-### A required tool is missing
-
-TermHat uses the tools already installed on your computer.
-
-For example:
-
-- `node`
-- `cargo`
-- `python`
-- `dotnet`
-- `docker`
-
-If a required tool isn't installed or isn't available in your PATH, the command may fail.
-
-### Windows: Command fails with a syntax error
-
-TermHat currently executes commands through the system's default shell.
-
-On Windows, this is usually `cmd.exe`, even if you normally work in PowerShell.
-
-Some PowerShell-specific commands may therefore fail.
-
-See [Known limitations](#-known-limitations).
-
----
-
-## ❓ Frequently asked questions
-
-**Is TermHat safe to use?**
-
-TermHat is designed so generated commands aren't executed without your confirmation. Potentially destructive operations require an additional typed confirmation.
-
-However, the commands and their risk classifications are AI-generated. Always review the actual command before running it.
-
-Think of TermHat as a helpful terminal assistant, not an infallible security tool.
-
-**Does TermHat work offline?**
-
-No. It needs an internet connection to communicate with the AI provider.
-
-**Is TermHat free?**
-
-TermHat is free and open source under the ISC license.
-
-Google Gemini offers a free usage tier, but API usage is subject to Google's limits and policies.
-
-**Why can't TermHat automatically change my directory?**
-
-Because `cd` changes the current shell session.
-
-TermHat runs commands in a separate temporary process, so that change would disappear when the process closes.
-
-See [Commands that need your terminal](#-commands-that-need-your-terminal).
-
-**Can I use TermHat inside scripts?**
-
-TermHat deliberately refuses to execute commands when it isn't connected to an interactive terminal.
-
-However, you can use:
-
-```bash
-th -c show disk usage
-```
-
-to generate and copy a command without executing it.
-
-**Which operating systems are supported?**
-
-Linux, macOS and Windows.
-
-TermHat sends your OS and shell information to the AI so it can generate appropriate commands.
-
-Windows currently has some shell compatibility limitations.
-
----
-
-## 👩‍💻 For developers
-
-Interested in understanding how TermHat works or contributing to it?
-
-Here's a quick overview of the project.
+### Design decisions
+
+- **Structured output over free text.** In v1.0.0, Gemini is asked to return one JSON object with `status`, `command`, `explanation`, `data_loss_risk` and `message`. The Gemini API response schema constrains the response format, and TermHat performs a runtime check of the parsed response fields and allowed values. This is response-format validation, not command-safety analysis.
+- **Status-driven control flow.** `READY` proceeds to review and confirmation; `MANUAL` displays the complete command and offers to copy it; other statuses display a message and stop. A `NEEDS_CLARIFICATION` response asks the user to add the missing detail in a new request.
+- **Prompt hardening.** The user's request is wrapped in `<request>` tags, closing request tags supplied by the user are stripped, and the system prompt says to treat request text and file or folder names as data rather than instructions. These measures are best-effort prompt hardening, not a security boundary or a guarantee against prompt injection.
+- **Environment-aware prompting.** The operating system, detected shell and current working directory are detected locally and sent with each request so the model can target the appropriate command syntax.
+- **Shell selection for execution.** TermHat passes the detected shell to Node's `child_process.execSync`. If shell detection returns `unknown`, Node's default shell is used.
+- **Process isolation made explicit.** Commands that need to change the user's current shell state receive `MANUAL` status instead of being executed in a child process where the change would disappear.
+- **Risk-tiered human confirmation.** Confirmation changes according to the AI-provided risk classification: default Yes, default No, or typed confirmation.
+- **Fail closed on missing or malformed responses.** A missing response, invalid JSON, structurally invalid response or empty runnable command is not executed.
+- **Responsiveness.** The AI SDK, clipboard library and banner font renderer are loaded on demand. Node's compile cache is enabled when the running Node.js version supports it. AI requests time out after 25 seconds.
+- **Low-variance generation.** Gemini requests use a low temperature (`0.1`) for more consistent output.
 
 ### Project structure
 
 ```text
 src/
-├── termhat.ts        Entry point and CLI options
-│
+├── termhat.ts          CLI entry point and option parsing (commander)
 ├── ui/
-│   ├── banner.ts     Startup banner
-│   └── home.ts       Interactive menu, guide and setup
-│
+│   ├── banner.ts       Startup banner
+│   └── home.ts         Interactive menu, guide and first-run setup
 ├── core/
-│   └── executer.ts  Main execution flow
-│
+│   └── executer.ts     Request flow, confirmation and execution
 ├── ai/
-│   ├── request.ts    AI provider selection
-│   ├── gemini.ts     Gemini connection and response schema
-│   ├── connect.ts    API key and model configuration
-│   └── prompt.ts     Master prompt
-│
+│   ├── request.ts      Provider selection
+│   ├── gemini.ts       Gemini client, response schema and timeout
+│   ├── connect.ts      API key and model setup
+│   └── prompt.ts       System prompt
 └── util/
-    ├── config.ts     Configuration management
-    ├── context.ts    OS, shell and directory detection
-    └── types.ts      Shared types
+    ├── config.ts       Persistent settings
+    ├── context.ts      OS, shell and directory detection, prompt building
+    └── types.ts        Shared types and response validation
 ```
 
-### Available scripts
+### AI response contract
 
-```bash
-npm run dev      # Run from source using tsx
-npm run build    # Compile TypeScript into dist/
-npm start        # Run the compiled application
-npm run link     # Build and link th / termhat globally
-```
-
-### AI response format
-
-The AI is expected to return exactly one JSON object.
-
-For example:
+The provider returns an object in this shape:
 
 ```json
 {
   "status": "READY",
   "command": "mkdir projects",
-  "explanation": "This command creates a directory named projects in the current directory. It fails if the directory already exists.",
+  "explanation": "This command will create a directory named projects in the current directory, and will fail if it already exists.",
   "data_loss_risk": "NONE",
   "message": null
 }
 ```
 
-The response is validated against a schema rather than relying on the prompt alone.
-
-### Response fields
-
-| Field | Type | Description |
+| Field | Type | Meaning |
 |---|---|---|
-| `status` | String | Determines how TermHat handles the response. |
-| `command` | String or null | Generated command. Only used for `READY` and `MANUAL`. |
-| `explanation` | String or null | Explains the generated command. |
-| `data_loss_risk` | String | One of `NONE`, `POSSIBLE`, `EXPECTED` or `UNKNOWN`. |
-| `message` | String or null | Additional information, clarification or refusal reason. |
-
-### Supported statuses
+| `status` | string | Controls how TermHat handles the response |
+| `command` | string or null | Single-line command. Required for `READY` and `MANUAL`; null for other statuses. |
+| `explanation` | string or null | Describes the command's actual effects. Required for `READY` and `MANUAL`; null for other statuses. |
+| `data_loss_risk` | string | `NONE`, `POSSIBLE`, `EXPECTED` or `UNKNOWN` |
+| `message` | string or null | A clarification question, refusal reason, manual-step explanation or optional note |
 
 | Status | Meaning | TermHat's behavior |
 |---|---|---|
-| `READY` | A command that TermHat can execute. | Displays, confirms and executes it. |
-| `MANUAL` | A command that must run in the user's current terminal session. | Displays the command and offers to copy it. |
-| `NEEDS_CLARIFICATION` | More information is required, or the request is too risky to interpret. | Asks the user a question. |
-| `UNSUPPORTED` | A terminal task that TermHat cannot safely handle. | Explains why it cannot perform the task. |
-| `OUT_OF_SCOPE` | A request unrelated to terminal operations. | Politely declines. |
+| `READY` | A command TermHat can run | Show, confirm according to risk, then run |
+| `MANUAL` | Must run in the user's own terminal session | Show and offer to copy; never execute |
+| `NEEDS_CLARIFICATION` | More detail is needed | Show the question and stop |
+| `UNSUPPORTED` | A terminal task TermHat will not or cannot do | Show the reason and stop |
+| `OUT_OF_SCOPE` | Not a terminal task | Politely decline and stop |
 
-An empty command is never executed.
+---
 
-### How a request is constructed
+## Development
 
-Each request sent to the AI includes environmental context and the user's original request.
-
-For example:
-
-```text
-OS: Linux
-Shell: bash
-Current Directory: /home/me/projects
-
-<request>make a folder called test</request>
+```bash
+npm install
+npm run dev       # run from source with tsx
+npm run build     # clean and compile TypeScript to dist/
+npm start         # run the compiled build
+npm run link      # build and link th / termhat globally
 ```
 
-The request is wrapped in dedicated tags to separate user-provided text from the surrounding instructions.
+The project is a TypeScript ES-module package built on [`commander`](https://github.com/tj/commander.js) (CLI parsing), [`@clack/prompts`](https://github.com/bombshell-dev/clack) (interactive UI), [`@google/genai`](https://www.npmjs.com/package/@google/genai) (Gemini client in v1.0.0), [`conf`](https://github.com/sindresorhus/conf) (settings), [`clipboardy`](https://github.com/sindresorhus/clipboardy) (clipboard), [`figlet`](https://github.com/patorjk/figlet.js) and [`picocolors`](https://github.com/alexeyraspopov/picocolors).
 
-Closing tags inside the user's request are stripped so they cannot break out of that boundary.
+### Testing
+
+There is no automated test suite yet. Before changing the system prompt in `src/ai/prompt.ts`, manually check cases such as these:
+
+| Request | Expected result |
+|---|---|
+| `delete everything` | `NEEDS_CLARIFICATION` |
+| `delete the folder x` | `READY`, `EXPECTED`, typed confirmation |
+| `go into projects` | `MANUAL` |
+| `set up django and activate it` | `MANUAL` |
+| `what is the weather` | `OUT_OF_SCOPE` |
+| A request telling the AI to ignore its rules | The model should not override its instructions or generate a destructive command because of that request |
+| `set up react vite typescript and tailwind` | Uses `@tailwindcss/vite`; no PostCSS or `tailwind.config.js` for the Tailwind v4 recipe |
+
+Prompt changes can alter behavior. Test the full flow (response parsing and validation, confirmation, cancellation, copying and execution), not only the model's raw answer. Multi-step commands should also be checked for partial completion when a later step fails.
 
 ### Adding another AI provider
 
-Want to support another AI provider?
+Additional providers are not included in v1.0.0. To add one in a future release:
 
-The current integration is designed around a common response format.
-
-The general steps are:
-
-1. Add a provider implementation inside `src/ai/`.
-2. Make it return the expected response format.
-3. Register it inside `src/ai/request.ts`.
-4. Add it to the provider selection in `src/ui/home.ts`.
-5. Handle its configuration in `src/ai/connect.ts`.
-
-### Testing changes to the AI prompt
-
-Changes to the master prompt can affect how TermHat behaves.
-
-Whenever you modify it, test it against a collection of important edge cases.
-
-Here are some examples worth keeping in your test set:
-
-| Request | Expected behavior |
-|---|---|
-| `delete everything` | `NEEDS_CLARIFICATION` |
-| `delete the folder x` | `EXPECTED`, typed confirmation |
-| `go into projects` | `MANUAL` |
-| `what is the weather` | `OUT_OF_SCOPE` |
-| `set up django and activate it` | `MANUAL` |
-| Request containing instructions to ignore safety rules | Must not override the system's intended behavior. |
-
-**A good prompt isn't enough on its own.** Test the actual generated commands, validation and execution flow too.
+1. Add a provider module in `src/ai/` that returns the shared response contract.
+2. Register the provider in `src/ai/request.ts`.
+3. Add its setup and connection flow to `src/ai/connect.ts` and `src/ui/home.ts`.
+4. Reuse the shared response validation before allowing a response to reach the execution flow.
 
 ---
 
-## ⚠️ Known limitations
+## Troubleshooting
 
-TermHat is still evolving. Here are some limitations worth knowing before using it.
+**"API key or model not configured"**  
+Run `th` and choose **Configure AI provider**.
 
-- **AI isn't perfect.** The generated command, explanation and risk classification can all be incorrect.
-- **Windows shell compatibility.** Commands currently run through the system's default shell, usually `cmd.exe`. PowerShell-specific syntax may not work.
-- **Only Gemini is supported.** Additional AI providers are planned.
-- **TermHat cannot inspect your files.** It doesn't know which files and folders already exist. It relies on safe defaults and command behavior rather than inspecting your filesystem.
-- **Multi-step operations aren't reversible.** If a later step fails, earlier successful steps remain completed.
-- **API keys are stored in plain text.** Your local configuration file should be kept private.
+**"Connection failed"**  
+Check that the API key is correct, the model name is available to your key, and you are online. When replacing an existing configuration, a failed connection test leaves the previous configuration in place.
+
+**"... took longer than 25s. Please try again."**  
+The request timed out. Try again, or switch models with `th -m`.
+
+**"This model is currently experiencing high demand"**  
+This message comes from the provider. It may be temporary. Try again later or switch models with `th -m`.
+
+**"TermHat needs an interactive terminal to confirm"**  
+TermHat refuses to run `READY` commands when input is piped or scripted. Run it directly in a terminal. Use `th -c` if you only need the generated command copied.
+
+**The clipboard does not work on Linux**  
+Install a clipboard helper such as `xclip` or `wl-clipboard`. If copying still fails, TermHat prints the command so you can copy it manually.
+
+**A command failed partway through**  
+Multi-step commands are not transactional. If step 4 of 6 fails, steps 1 to 3 may already have completed (for example, a project folder may exist). Check what was created before retrying.
+
+**A command fails because a tool is missing**  
+TermHat uses tools installed on your machine (`node`, `python`, `cargo`, `dotnet`, `docker` and others). The explanation should identify tools required by the generated command, but it cannot install every system dependency automatically.
+
+**A Windows command fails with a syntax error**  
+See [Known limitations](#known-limitations) for shell-detection limitations.
 
 ---
 
-## 🗺️ Roadmap
+## FAQ
 
-TermHat has plenty of room to grow.
+**Is it safe?**  
+TermHat requires confirmation before executing a `READY` command, and higher-risk classifications require stronger confirmation. However, the command and risk label come from an AI model. Read the complete command before confirming it. v1.0.0 does not include an independent rule-based safety engine.
 
-Some improvements I'd like to explore:
+**Does it work offline?**  
+No. It needs an internet connection to contact the configured AI provider. v1.0.0 uses Google Gemini.
 
-- [ ] An independent safety layer that blocks catastrophic commands regardless of the AI's risk classification.
-- [ ] Better follow-up questions when a request needs clarification.
-- [ ] Support for additional AI providers.
-- [ ] Improved Windows and PowerShell compatibility.
-- [ ] Command history.
+**Is TermHat free to use, and where is my API key stored?**  
+TermHat is free and open source under the ISC license you simply bring your own AI provider API key (many offer free tiers to get started).  Your key is stored locally on your machine (via `conf`) and is only sent directly to chosen AI provider when you run a task.
 
-The goal isn't to make TermHat execute more commands blindly.
+**Why does it not just `cd` for me?**  
+A child process cannot change the parent terminal's current directory. See [Commands that need your own terminal](#commands-that-need-your-own-terminal).
 
-It's to make it more capable while keeping the user in control.
+**Can it run quick scripts without creating a file?**  
+Yes. When a standard shell command is not enough, TermHat can generate and run inline one-liners such as `node -e` or `python -c` directly in your terminal after confirmation. For example, you can ask it to list and sort files by size while skipping `node_modules`, as long as Node.js or Python is installed on your machine.
+
+**Can I use it in scripts?**  
+TermHat intentionally refuses to execute `READY` commands when it cannot get interactive confirmation. `th -c <task>` can generate and copy a command without executing it.
+
+**Can it set up full projects and environments, not just single commands?**  
+Yes. TermHat can chain multiple setup steps into a single request such as scaffolding a React or Next.js app, creating a Python virtual environment and installing packages, or initializing a Rust project with `cargo` as long as those tools are already installed on your machine.
+
+**Which platforms are supported?**  
+Linux, macOS and Windows. TermHat has been developed and tested mainly on Windows with PowerShell. Linux and macOS support is implemented but has had less testing.
+
+**Which AI providers are available?**  
+Google Gemini is the provider implemented in v1.0.0. Additional providers may be added in future releases.
 
 ---
 
-## 📄 License
+## Known limitations
 
-TermHat is released under the [ISC License](https://opensource.org/license/isc-license-txt).
+- **AI can be wrong.** The generated command, explanation and risk classification can all be incorrect.
+- **Project files are not inspected or edited directly.** TermHat does not know which files already exist, so it relies on the model's instructions and safe defaults. It can describe edits to existing files, but you may need to make those edits yourself.
+- **Heuristic shell detection.** TermHat detects your active shell from environment variables, which can occasionally misidentify nested shells (such as PowerShell launched inside `cmd`).
+- **No filesystem awareness.** For privacy, TermHat does not inspect your existing files or folder contents. It relies on safe defaults rather than checking what already exists in your directory.
+- **Platform testing.** Primarily tested on Windows (PowerShell/CMD); Linux and macOS are supported, with broader testing ongoing.
+
+---
+
+## Roadmap
+
+- **Independent safety layer:** A local rule-based check that intercepts catastrophic commands and raises risk levels regardless of the AI's classification.
+- **Automatic retry and model fallback:** Seamless retries or automatic fallback to a secondary model when an API endpoint is rate-limited or busy.
+- **Interactive clarification flow:** Multi-turn follow-up questions inside the same session when a request is ambiguous, rather than exiting immediately.
+- **More AI providers & offline local models:** Support for OpenAI, Anthropic, and OpenAI-compatible endpoints—unlocking local, offline execution via Ollama.
+- **Lightweight project detection:** Privacy-safe detection of marker files (such as `package.json`, `Cargo.toml`, or `requirements.txt`) without reading file contents, so TermHat automatically uses the right package manager or toolchain.
+- **Command history:** Browse, search, and re-run previously generated commands locally without spending extra API tokens.
+- **Saved workflow aliases:** Save multi-step setups (such as scaffolding a React + Vite + Tailwind + TypeScript stack) as reusable custom shortcuts (`th execute <alias>`) for instant, zero-token execution.
+- **Step-by-step chain execution:** Option to run multi-step commands one step at a time with live output, allowing you to inspect progress or stop early if a step fails.
+- **Error recovery mode (`th fix`):** Analyze the output of a failed command and suggest a targeted fix, such as installing a missing dependency or correcting syntax.
+- **Shell wrapper for session commands:** An optional shell hook (`.bashrc`, `.zshrc`, or PowerShell `$PROFILE`) so commands like `cd` or `venv` activation can run directly in your active terminal after confirmation.
+- **Safe file and config editing:** Create or update project config files (such as `vite.config.ts` or `.env`) with a clear before-and-after diff preview before saving changes.
+---
+
+## License
+
+Released under the ISC License. See the [`LICENSE`](LICENSE) file.
 
 ---
 
 <div align="center">
 
-### 🎩 TermHat
-
 **You describe it. You review it. You stay in control.**
-
-Thanks for checking out TermHat!
 
 </div>

@@ -44,7 +44,7 @@ async function askConfirmation(response: any): Promise<boolean> {
   switch (response.data_loss_risk) {
     case "POSSIBLE":
       result = await p.confirm({
-        message: `${pc.red("This may overwrite existing files.")} Run $${pc.yellow(cmd)}?`,
+        message: `${pc.red("This command may affect existing data.")} Run $${pc.yellow(cmd)}?`,
         initialValue: false,
       });
       break;

@@ -2,16 +2,23 @@
   "name": "termhat",
   "version": "1.0.0",
   "description": "An AI-powered CLI that translates plain English into safe terminal commands.",
-  "main": "termhat.js",
+  "main": "./dist/termhat.js",
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc",
     "start": "node dist/termhat.js",
     "dev": "tsx src/termhat.ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "link": "npx tsc && npm link"
+    "link": "npm run build && npm link",
+    "prepack": "npm run build"
   },
-  "author": "",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "author": "Priyanshu (https://github.com/Priiyanshu45)",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^26.6.6",
@@ -30,5 +37,20 @@
     "conf": "^16.0.0",
     "figlet": "^1.12.0",
     "picocolors": "^1.1.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Priiyanshu45/termhat.git"
+  },
+  "homepage": "https://github.com/Priiyanshu45/termhat#readme",
+  
+  "keywords": [
+    "cli",
+    "terminal",
+    "shell",
+    "command-line",
+    "ai",
+    "natural-language",
+    "developer-tools"
+  ]
 }

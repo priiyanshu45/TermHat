@@ -16,3 +16,7 @@ export interface configTypes {
   provider: string;
   model: string;
 }
+
+export interface AIModelMap {
+  gemini: string;
+}
