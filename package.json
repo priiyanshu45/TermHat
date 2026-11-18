@@ -1,6 +1,6 @@
 {
   "name": "termhat",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An AI-powered CLI that translates plain English into safe terminal commands.",
   "main": "./dist/termhat.js",
   "type": "module",
