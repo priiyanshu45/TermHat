@@ -20,7 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com), and this 
 
 ---
 
-## [1.0.0] - 2026-11-19
+## [1.0.0] - 2026-11-15
 
 ### Added
 - First public release of **TermHat** (`th` / `termhat`) CLI assistant.
