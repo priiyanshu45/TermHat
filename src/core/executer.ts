@@ -40,7 +40,7 @@ async function runCommand(command: string) {
 async function askConfirmation(response: any): Promise<boolean> {
   const cmd = response.command as string;
   let result;
-
+  
   switch (response.data_loss_risk) {
     case "POSSIBLE":
       result = await p.confirm({

@@ -1,6 +1,6 @@
 import pc from "picocolors";
 import * as p from "@clack/prompts";
-import { configure, getConfig, clearConfig } from "../util/config.js";
+import { configure, getConfig } from "../util/config.js";
 import type { AIModelMap, configTypes } from "../util/types.js";
 
 
@@ -22,7 +22,6 @@ export async function connectToAI(ai: AI): Promise<void> {
       p.outro(pc.green(`Nothing change. You're in control.`));
       return;
     }
-    clearConfig();
   }
 
   const apikey: string | symbol = await p.password({

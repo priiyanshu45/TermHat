@@ -6,7 +6,7 @@
 
 A cross-platform command-line assistant that turns plain-English requests into terminal commands, explains what they do, and **runs them only after you review and confirm.**
 
-**TermHat v1.0.0 currently supports Google Gemini. Additional AI provider integrations are planned for future releases.**
+**TermHat currently supports Google Gemini. Additional AI provider integrations are planned for future releases.**
 
 ```bash
 th set up a react project called shop
@@ -16,29 +16,64 @@ th set up a react project called shop
 
 ---
 
-## Highlights
+## Installation
 
-- **Natural language to shell commands** for Linux, macOS and Windows. TermHat sends your request together with your operating system, detected shell and current working directory so the AI can generate environment-aware commands.
-- **Human confirmation before execution.** TermHat displays the generated command and asks before running it. The `--run` option does not bypass confirmation.
-- **Risk-tiered confirmation.** Commands classified as `NONE` or `POSSIBLE` use Yes/No prompts that default to No; `EXPECTED` and `UNKNOWN` require you to type `CONFIRM`.
-- **Structured AI output.** Gemini is instructed to return a fixed JSON response shape. TermHat parses the response and checks its required fields and allowed values before processing it. This checks the response format, not whether the command is safe.
-- **Multi-step tasks in one request.** The model can chain up to about 10 dependent steps for tasks such as project scaffolding, Python environments, Git and Docker basics.
-- **Honest about terminal-session limits.** Commands such as `cd` and virtual-environment activation are shown for you to paste into your own terminal instead of pretending a child process can change your current shell.
-- **Lazy-loaded modules.** Modules such as the AI SDK and clipboard support are loaded only when needed.
+### Requirements
+
+- **Node.js 22.12.0 or later.** This minimum is required by the current CLI dependencies. A supported Node.js LTS release is recommended.
+- **A Google Gemini API key** for current version, available from [Google AI Studio](https://aistudio.google.com/apikey).
+- An internet connection when generating commands or testing the provider connection.
+
+### Install from npm
+
+```bash
+npm install -g termhat
+```
+
+### Install from source
+
+```bash
+git clone https://github.com/priiyanshu45/termhat.git
+cd termhat
+npm install
+npm run link
+```
+
+The installation provides two equivalent command names:
+
+```bash
+th         # short form
+termhat    # full name
+```
+
+---
+
+## Configuration
+
+Run `th` and choose **Configure AI provider**, or use `th -m` to change only the model.
+
+| Setting | Details |
+|---|---|
+| Provider | Google Gemini (the provider implemented in this release) |
+| API key | Entered once, masked while typing, and tested before the new configuration is saved |
+| Model | Defaults to `gemini-3.5-flash`; you can enter another model name your API key can access |
+
+When replacing existing credentials, TermHat asks for confirmation. The existing configuration is kept unless the new API key and model pass the connection test. Changing the model also tests the new model before saving it.
 
 ---
 
 ## Table of contents
 
-- [Example session](#example-session)
 - [Installation](#installation)
+- [Configuration](#configuration)
+- [Example session](#example-session)
 - [Getting started](#getting-started)
 - [Usage](#usage)
 - [Examples](#examples)
 - [Safety model](#safety-model)
 - [Commands that need your own terminal](#commands-that-need-your-own-terminal)
 - [Privacy and data handling](#privacy-and-data-handling)
-- [Configuration](#configuration)
+- [Highlights](#highlights)
 - [Scope](#scope)
 - [How it works (architecture)](#how-it-works-architecture)
 - [Development](#development)
@@ -80,38 +115,6 @@ The exact command and explanation depend on your operating system, shell and the
 
 ---
 
-## Installation
-
-### Requirements
-
-- **Node.js 22.12.0 or later.** This minimum is required by the current CLI dependencies. A supported Node.js LTS release is recommended.
-- **A Google Gemini API key** for v1.0.0, available from [Google AI Studio](https://aistudio.google.com/apikey).
-- An internet connection when generating commands or testing the provider connection.
-
-### Install from npm
-
-```bash
-npm install -g termhat
-```
-
-### Install from source
-
-```bash
-git clone https://github.com/Priiyanshu45/termhat.git
-cd termhat
-npm install
-npm run link
-```
-
-The installation provides two equivalent command names:
-
-```bash
-th         # short form
-termhat    # full name
-```
-
----
-
 ## Getting started
 
 **1. Launch TermHat.**
@@ -124,7 +127,7 @@ On the first run, TermHat asks you to configure an AI provider.
 
 **2. Connect Google Gemini.**
 
-Google Gemini is the provider implemented in v1.0.0. Paste your API key (the input is masked) and press Enter to accept the default model, or enter another model name available to your API key. TermHat tests the key and model before saving the new configuration. After successful setup, it exits; run `th` again to start using it.
+Google Gemini is the only provider currently implemented. Paste your API key (the input is masked) and press Enter to accept the default model, or enter another model name available to your API key. TermHat tests the key and model before saving the new configuration. After successful setup, it exits; run `th` again to start using it.
 
 **3. Make a request.**
 
@@ -274,7 +277,7 @@ The AI response includes a `data_loss_risk` value. TermHat uses that value to ch
 
 | Risk | Meaning | Confirmation |
 |---|---|---|
-| `NONE` | The AI classifies the command as not deleting or overwriting existing data | Yes/No prompt, defaults to No |
+| `NONE` | The AI classifies the command as not deleting or overwriting existing data | Yes/No prompt, defaults to Yes |
 | `POSSIBLE` | Existing data might be overwritten or changed | Warning and Yes/No prompt, defaults to No |
 | `EXPECTED` | Destruction or removal is the intended effect | Must type `CONFIRM` |
 | `UNKNOWN` | The command's impact is uncertain | Must type `CONFIRM` |
@@ -291,14 +294,14 @@ Requests such as "delete everything" or "free up space" do not identify a precis
 
 - `--run` never skips confirmation.
 - For a `READY` command, TermHat refuses execution when it is not attached to an interactive terminal.
-- An empty or structurally invalid AI response is not processed as a runnable command.
+- An empty or unparseable AI response is not processed as a runnable command.
 - Cancelling a prompt or pressing `Ctrl+C` exits without approving the command.
 - Copying a command does not execute it.
 - `MANUAL` commands are shown for the user to paste into their own terminal; TermHat does not execute them.
 
 ### What this does not guarantee
 
-The command, explanation and risk classification are generated by an AI model, and the model can be wrong. A command labelled `NONE` is **not guaranteed to be harmless**. TermHat v1.0.0 does not include an independent, rule-based safety engine that overrides the AI's risk classification. Always inspect the complete command and understand its effects before confirming it.
+The command, explanation and risk classification are generated by an AI model, and the model can be wrong. A command labelled `NONE` is **not guaranteed to be harmless**. TermHat, current release does not include an independent, rule-based safety engine that overrides the AI's risk classification. Always inspect the complete command and understand its effects before confirming it.
 
 Prompt hardening is also not a security boundary. Malicious or unusual request text can still be misunderstood by a model.
 
@@ -345,7 +348,7 @@ The rule is simple: **either TermHat runs the whole task, or it gives you the wh
 
 ### Sent to the AI provider with each request
 
-In v1.0.0, requests are sent to Google Gemini with:
+Requests are sent to your AI provider with:
 
 - The text of your request
 - Your operating system name
@@ -366,17 +369,15 @@ Requests sent to Gemini are subject to Google's applicable terms and privacy pol
 
 ---
 
-## Configuration
+## Highlights
 
-Run `th` and choose **Configure AI provider**, or use `th -m` to change only the model.
-
-| Setting | Details in v1.0.0 |
-|---|---|
-| Provider | Google Gemini (the provider implemented in this release) |
-| API key | Entered once, masked while typing, and tested before the new configuration is saved |
-| Model | Defaults to `gemini-3.5-flash`; you can enter another model name your API key can access |
-
-When replacing existing credentials, TermHat asks for confirmation. The existing configuration is kept unless the new API key and model pass the connection test. Changing the model also tests the new model before saving it.
+- **Natural language to shell commands** for Linux, macOS and Windows. TermHat sends your request together with your operating system, detected shell and current working directory so the AI can generate environment-aware commands.
+- **Human confirmation before execution.** TermHat displays the generated command and asks before running it. The `--run` option does not bypass confirmation.
+- **Risk-tiered confirmation.** NONE and POSSIBLE use Yes/No prompts (NONE defaults to Yes, POSSIBLE defaults to No); EXPECTED and UNKNOWN require typing CONFIRM.
+- **Structured AI output.** Gemini is instructed to return a fixed JSON response shape. This only parse the response format, not whether the command is safe.
+- **Multi-step tasks in one request.** The model can chain up to about 10 dependent steps for tasks such as project scaffolding, Python environments, Git and Docker basics.
+- **Honest about terminal-session limits.** Commands such as `cd` and virtual-environment activation are shown for you to paste into your own terminal instead of pretending a child process can change your current shell.
+- **Lazy-loaded modules.** Modules such as the AI SDK and clipboard support are loaded only when needed.
 
 ---
 
@@ -417,13 +418,13 @@ request
 build user prompt (OS, shell, cwd, request text)
    │
    ▼
-provider selection (v1.0.0: Google Gemini)
+provider selection
    │
    ▼
 Gemini response using a constrained JSON schema
    │
    ▼
-parse JSON + validate response structure
+parse JSON
    │
    ▼
 status: READY | MANUAL | NEEDS_CLARIFICATION | UNSUPPORTED | OUT_OF_SCOPE
@@ -437,7 +438,7 @@ status: READY | MANUAL | NEEDS_CLARIFICATION | UNSUPPORTED | OUT_OF_SCOPE
 
 ### Design decisions
 
-- **Structured output over free text.** In v1.0.0, Gemini is asked to return one JSON object with `status`, `command`, `explanation`, `data_loss_risk` and `message`. The Gemini API response schema constrains the response format, and TermHat performs a runtime check of the parsed response fields and allowed values. This is response-format validation, not command-safety analysis.
+- **Structured output over free text.** In current release, Gemini is asked to return one JSON object with `status`, `command`, `explanation`, `data_loss_risk` and `message`. The Gemini API response schema constrains the response format. This is not command-safety analysis.
 - **Status-driven control flow.** `READY` proceeds to review and confirmation; `MANUAL` displays the complete command and offers to copy it; other statuses display a message and stop. A `NEEDS_CLARIFICATION` response asks the user to add the missing detail in a new request.
 - **Prompt hardening.** The user's request is wrapped in `<request>` tags, closing request tags supplied by the user are stripped, and the system prompt says to treat request text and file or folder names as data rather than instructions. These measures are best-effort prompt hardening, not a security boundary or a guarantee against prompt injection.
 - **Environment-aware prompting.** The operating system, detected shell and current working directory are detected locally and sent with each request so the model can target the appropriate command syntax.
@@ -466,7 +467,7 @@ src/
 └── util/
     ├── config.ts       Persistent settings
     ├── context.ts      OS, shell and directory detection, prompt building
-    └── types.ts        Shared types and response validation
+    └── types.ts        Shared types
 ```
 
 ### AI response contract
@@ -511,7 +512,7 @@ npm start         # run the compiled build
 npm run link      # build and link th / termhat globally
 ```
 
-The project is a TypeScript ES-module package built on [`commander`](https://github.com/tj/commander.js) (CLI parsing), [`@clack/prompts`](https://github.com/bombshell-dev/clack) (interactive UI), [`@google/genai`](https://www.npmjs.com/package/@google/genai) (Gemini client in v1.0.0), [`conf`](https://github.com/sindresorhus/conf) (settings), [`clipboardy`](https://github.com/sindresorhus/clipboardy) (clipboard), [`figlet`](https://github.com/patorjk/figlet.js) and [`picocolors`](https://github.com/alexeyraspopov/picocolors).
+The project is a TypeScript ES-module package built on [`commander`](https://github.com/tj/commander.js) (CLI parsing), [`@clack/prompts`](https://github.com/bombshell-dev/clack) (interactive UI), [`@google/genai`](https://www.npmjs.com/package/@google/genai) (Gemini client in current version), [`conf`](https://github.com/sindresorhus/conf) (settings), [`clipboardy`](https://github.com/sindresorhus/clipboardy) (clipboard), [`figlet`](https://github.com/patorjk/figlet.js) and [`picocolors`](https://github.com/alexeyraspopov/picocolors).
 
 ### Testing
 
@@ -527,16 +528,15 @@ There is no automated test suite yet. Before changing the system prompt in `src/
 | A request telling the AI to ignore its rules | The model should not override its instructions or generate a destructive command because of that request |
 | `set up react vite typescript and tailwind` | Uses `@tailwindcss/vite`; no PostCSS or `tailwind.config.js` for the Tailwind v4 recipe |
 
-Prompt changes can alter behavior. Test the full flow (response parsing and validation, confirmation, cancellation, copying and execution), not only the model's raw answer. Multi-step commands should also be checked for partial completion when a later step fails.
+Prompt changes can alter behavior. Test the full flow (response parsing, confirmation, cancellation, copying and execution), not only the model's raw answer. Multi-step commands should also be checked for partial completion when a later step fails.
 
 ### Adding another AI provider
 
-Additional providers are not included in v1.0.0. To add one in a future release:
+Additional providers are not included in current release. To add one in a future release:
 
 1. Add a provider module in `src/ai/` that returns the shared response contract.
 2. Register the provider in `src/ai/request.ts`.
 3. Add its setup and connection flow to `src/ai/connect.ts` and `src/ui/home.ts`.
-4. Reuse the shared response validation before allowing a response to reach the execution flow.
 
 ---
 
@@ -574,13 +574,13 @@ See [Known limitations](#known-limitations) for shell-detection limitations.
 ## FAQ
 
 **Is it safe?**  
-TermHat requires confirmation before executing a `READY` command, and higher-risk classifications require stronger confirmation. However, the command and risk label come from an AI model. Read the complete command before confirming it. v1.0.0 does not include an independent rule-based safety engine.
+TermHat requires confirmation before executing a `READY` command, and higher-risk classifications require stronger confirmation. However, the command and risk label come from an AI model. Read the complete command before confirming it. Current release does not include an independent rule-based safety engine.
 
 **Does it work offline?**  
-No. It needs an internet connection to contact the configured AI provider. v1.0.0 uses Google Gemini.
+No. It needs an internet connection to contact the configured AI provider.
 
 **Is TermHat free to use, and where is my API key stored?**  
-TermHat is free and open source under the ISC license you simply bring your own AI provider API key (many offer free tiers to get started).  Your key is stored locally on your machine (via `conf`) and is only sent directly to chosen AI provider when you run a task.
+TermHat is free and open source under the ISC license. You bring your own AI provider API key (many offer free tiers to get started). Your key is stored locally on your machine (via `conf`) and is only sent directly to chosen AI provider when you run a task. 
 
 **Why does it not just `cd` for me?**  
 A child process cannot change the parent terminal's current directory. See [Commands that need your own terminal](#commands-that-need-your-own-terminal).
@@ -598,7 +598,7 @@ Yes. TermHat can chain multiple setup steps into a single request such as scaffo
 Linux, macOS and Windows. TermHat has been developed and tested mainly on Windows with PowerShell. Linux and macOS support is implemented but has had less testing.
 
 **Which AI providers are available?**  
-Google Gemini is the provider implemented in v1.0.0. Additional providers may be added in future releases.
+Google Gemini is the current provider. Additional providers may be added in future releases.
 
 ---
 

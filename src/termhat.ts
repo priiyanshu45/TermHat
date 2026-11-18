@@ -10,7 +10,7 @@ if (typeof module.enableCompileCache === "function") {
 const { program } = await import("commander");
 program
   .name("termhat")
-  .version("1.0.0")
+  .version("1.0.1")
   .description("Turn natural-language requests into safe terminal commands.")
   .argument("[task...]", "Describe the task you want to run")
   .option("-r, --run", "Skip menus and jump straight to confirmation")

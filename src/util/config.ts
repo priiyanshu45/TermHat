@@ -44,6 +44,7 @@ export async function changeModel() {
       if (await testConnection(ai.apiKey.trim(), (newModel as string).trim())) {
         conf.set("model", newModel);
         console.log(pc.cyan(`Done! Saved ${newModel as string} for ${ai.provider}.`));
+        return;
       } else {
         console.log(pc.red("Connection failed. Please try again."));
         return null;
@@ -53,9 +54,4 @@ export async function changeModel() {
       console.log(pc.red(`Unsupported AI provider: ${ai}`));
       return null;
   }
-}
-
-
-export function clearConfig() {
-  conf.clear();
 }
